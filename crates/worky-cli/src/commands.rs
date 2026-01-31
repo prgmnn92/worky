@@ -151,22 +151,8 @@ pub fn list(
         .list_items(filter.as_ref())
         .context("Failed to list items")?;
 
-    if items.is_empty() {
-        output::print_success("No items found", format);
-        return Ok(());
-    }
-
-    // Print header for human format
-    if matches!(format, OutputFormat::Human) {
-        println!(
-            "{:<30} {:12} {:10} {}",
-            "UID", "STATE", "ASSIGNEE", "TITLE"
-        );
-        println!("{}", "-".repeat(80));
-    }
-
     let summaries: Vec<WorkItemSummary> = items.iter().map(WorkItemSummary::from).collect();
-    output::print_list(&summaries, format);
+    output::print_item_list(&summaries, format);
 
     Ok(())
 }

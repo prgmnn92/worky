@@ -59,6 +59,68 @@ pub fn print_list<T: Serialize + HumanDisplay>(values: &[T], format: OutputForma
     }
 }
 
+/// Print a list of work item summaries with dynamic column widths.
+pub fn print_item_list(items: &[WorkItemSummary], format: OutputFormat) {
+    match format {
+        OutputFormat::Human => {
+            if items.is_empty() {
+                println!("No work items found.");
+                return;
+            }
+
+            // Calculate max widths (with minimum for headers)
+            let uid_width = items.iter().map(|i| i.uid.len()).max().unwrap_or(3).max(3);
+            let state_width = items.iter().map(|i| i.state.len()).max().unwrap_or(5).max(5);
+            let assignee_width = items
+                .iter()
+                .map(|i| i.assignee.as_ref().map(|a| a.len()).unwrap_or(1))
+                .max()
+                .unwrap_or(1)
+                .max(8);
+
+            // Print header
+            println!(
+                "{:<uid_w$}  {:<state_w$}  {:<assignee_w$}  {}",
+                "UID",
+                "STATE",
+                "ASSIGNEE",
+                "TITLE",
+                uid_w = uid_width,
+                state_w = state_width,
+                assignee_w = assignee_width
+            );
+            let total_width = uid_width + state_width + assignee_width + 20;
+            println!("{}", "-".repeat(total_width));
+
+            for item in items {
+                let assignee = item.assignee.as_deref().unwrap_or("-");
+                println!(
+                    "{:<uid_w$}  {:<state_w$}  {:<assignee_w$}  {}",
+                    item.uid,
+                    item.state,
+                    assignee,
+                    item.title,
+                    uid_w = uid_width,
+                    state_w = state_width,
+                    assignee_w = assignee_width
+                );
+            }
+        }
+        OutputFormat::Json => {
+            println!(
+                "{}",
+                serde_json::to_string_pretty(items).expect("Failed to serialize to JSON")
+            );
+        }
+        OutputFormat::Yaml => {
+            println!(
+                "{}",
+                serde_yaml::to_string(items).expect("Failed to serialize to YAML")
+            );
+        }
+    }
+}
+
 /// Print a success message.
 pub fn print_success(message: &str, format: OutputFormat) {
     match format {
