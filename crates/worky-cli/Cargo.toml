@@ -1,0 +1,30 @@
+[package]
+name = "worky-cli"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "CLI for worky work item management"
+
+[[bin]]
+name = "worky"
+path = "src/main.rs"
+
+[lints]
+workspace = true
+
+[dependencies]
+worky-core.workspace = true
+worky-fs.workspace = true
+worky-toolserver.workspace = true
+anyhow.workspace = true
+axum.workspace = true
+clap.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+serde_yaml.workspace = true
+chrono.workspace = true
+tokio.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+dialoguer = "0.11"
+console = "0.15"

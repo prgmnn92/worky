@@ -1,0 +1,18 @@
+# Sample workctl workspace configuration
+# Copy this to your project as .workctl/config.yml
+
+version: 1
+
+workspace:
+  name: "my-project"
+
+defaults:
+  state: "TODO"
+  labels: []
+
+# Future: board connectors
+# connectors:
+#   - type: azure-devops
+#     org: myorg
+#     project: myproject
+#     pat_env: AZURE_DEVOPS_PAT

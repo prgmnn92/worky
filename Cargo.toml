@@ -1,0 +1,63 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/worky-core",
+    "crates/worky-fs",
+    "crates/worky-cli",
+    "crates/worky-toolserver",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+authors = ["worky contributors"]
+license = "MIT"
+repository = "https://github.com/worky/worky"
+
+[workspace.dependencies]
+# Error handling
+anyhow = "1.0"
+thiserror = "2.0"
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+serde_yaml = "0.9"
+
+# CLI
+clap = { version = "4.5", features = ["derive", "env"] }
+
+# Async runtime
+tokio = { version = "1.43", features = ["full"] }
+
+# HTTP server
+axum = "0.8"
+tower = "0.5"
+tower-http = { version = "0.6", features = ["cors", "trace"] }
+
+# Time & IDs
+chrono = { version = "0.4", features = ["serde"] }
+uuid = { version = "1.11", features = ["v4", "serde"] }
+
+# Filesystem utilities
+walkdir = "2.5"
+
+# Logging/tracing
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+
+# Text processing
+slug = "0.1"
+
+# Internal crates
+worky-core = { path = "crates/worky-core" }
+worky-fs = { path = "crates/worky-fs" }
+worky-toolserver = { path = "crates/worky-toolserver" }
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+
+[workspace.lints.clippy]
+all = "warn"
+pedantic = "warn"
+nursery = "warn"

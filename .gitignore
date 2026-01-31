@@ -1,0 +1,22 @@
+# Rust
+/target/
+**/*.rs.bk
+Cargo.lock
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# macOS
+.DS_Store
+
+# worky workspace files (for testing)
+.worky/
+work/
+
+# Environment
+.env
+.env.local
