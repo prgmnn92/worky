@@ -7,6 +7,7 @@ pub const INDEX_HTML: &str = r#"<!DOCTYPE html>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>worky - Kanban Board</title>
     <link rel="stylesheet" href="/styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 <body>
     <header>
@@ -175,10 +176,24 @@ pub const INDEX_HTML: &str = r#"<!DOCTYPE html>
                 <div class="detail-row"><strong>Updated:</strong> ${item.updated_at}</div>
             `;
 
+            // Check for description field (render as markdown)
+            if (item.fields && item.fields.description) {
+                html += `<h3>Description</h3><div class="markdown-content">${renderMarkdown(item.fields.description)}</div>`;
+            }
+
             if (item.fields && Object.keys(item.fields).length > 0) {
-                html += `<h3>Custom Fields</h3>`;
-                for (const [key, value] of Object.entries(item.fields)) {
-                    html += `<div class="detail-row"><strong>${escapeHtml(key)}:</strong> ${escapeHtml(String(value))}</div>`;
+                const otherFields = Object.entries(item.fields).filter(([k]) => k !== 'description');
+                if (otherFields.length > 0) {
+                    html += `<h3>Custom Fields</h3>`;
+                    for (const [key, value] of otherFields) {
+                        // Render string values as markdown if they contain markdown-like syntax
+                        const valueStr = String(value);
+                        if (typeof value === 'string' && (valueStr.includes('```') || valueStr.includes('- ') || valueStr.includes('# ') || valueStr.includes('**'))) {
+                            html += `<div class="detail-row"><strong>${escapeHtml(key)}:</strong></div><div class="markdown-content">${renderMarkdown(valueStr)}</div>`;
+                        } else {
+                            html += `<div class="detail-row"><strong>${escapeHtml(key)}:</strong> ${escapeHtml(valueStr)}</div>`;
+                        }
+                    }
                 }
             }
 
@@ -191,7 +206,7 @@ pub const INDEX_HTML: &str = r#"<!DOCTYPE html>
                                 <span class="comment-author">${escapeHtml(c.actor || 'user')}</span>
                                 <span class="comment-time">${c.timestamp}</span>
                             </div>
-                            <div class="comment-body">${escapeHtml(c.message)}</div>
+                            <div class="comment-body markdown-content">${renderMarkdown(c.message)}</div>
                         </div>
                     `;
                 });
@@ -210,6 +225,18 @@ pub const INDEX_HTML: &str = r#"<!DOCTYPE html>
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
+        }
+
+        function renderMarkdown(text) {
+            if (!text) return '';
+            // Configure marked for safe rendering
+            marked.setOptions({
+                breaks: true,      // Convert \n to <br>
+                gfm: true,         // GitHub Flavored Markdown
+                headerIds: false,  // Don't add IDs to headers
+                mangle: false      // Don't mangle email addresses
+            });
+            return marked.parse(text);
         }
 
         // Close modal on escape key
@@ -489,8 +516,110 @@ main {
 
 .comment-body {
     font-size: 0.9rem;
-    white-space: pre-wrap;
     line-height: 1.4;
+}
+
+/* Markdown content styling */
+.markdown-content {
+    font-size: 0.9rem;
+    line-height: 1.6;
+}
+
+.markdown-content h1,
+.markdown-content h2,
+.markdown-content h3,
+.markdown-content h4 {
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+    color: #eee;
+}
+
+.markdown-content h1 { font-size: 1.4rem; }
+.markdown-content h2 { font-size: 1.2rem; }
+.markdown-content h3 { font-size: 1.1rem; }
+.markdown-content h4 { font-size: 1rem; }
+
+.markdown-content p {
+    margin-bottom: 0.75rem;
+}
+
+.markdown-content ul,
+.markdown-content ol {
+    margin-left: 1.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.markdown-content li {
+    margin-bottom: 0.25rem;
+}
+
+.markdown-content code {
+    background: #0f3460;
+    padding: 0.15rem 0.4rem;
+    border-radius: 3px;
+    font-family: 'Fira Code', 'Monaco', 'Consolas', monospace;
+    font-size: 0.85em;
+}
+
+.markdown-content pre {
+    background: #0f3460;
+    padding: 1rem;
+    border-radius: 6px;
+    overflow-x: auto;
+    margin-bottom: 0.75rem;
+}
+
+.markdown-content pre code {
+    background: none;
+    padding: 0;
+    font-size: 0.85rem;
+    line-height: 1.5;
+}
+
+.markdown-content blockquote {
+    border-left: 3px solid #e94560;
+    padding-left: 1rem;
+    margin-left: 0;
+    margin-bottom: 0.75rem;
+    color: #94a3b8;
+    font-style: italic;
+}
+
+.markdown-content a {
+    color: #60a5fa;
+    text-decoration: none;
+}
+
+.markdown-content a:hover {
+    text-decoration: underline;
+}
+
+.markdown-content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 0.75rem;
+}
+
+.markdown-content th,
+.markdown-content td {
+    border: 1px solid #0f3460;
+    padding: 0.5rem;
+    text-align: left;
+}
+
+.markdown-content th {
+    background: #0f3460;
+}
+
+.markdown-content hr {
+    border: none;
+    border-top: 1px solid #0f3460;
+    margin: 1rem 0;
+}
+
+.markdown-content img {
+    max-width: 100%;
+    border-radius: 4px;
 }
 
 /* Scrollbar styling */
