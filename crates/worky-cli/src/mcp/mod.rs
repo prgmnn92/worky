@@ -46,8 +46,9 @@ pub fn serve(workspace_path: &Path) -> Result<()> {
             }
         };
 
-        let response = handle_request(workspace_path, &request);
-        write_response(&mut stdout, &response)?;
+        if let Some(response) = handle_request(workspace_path, &request) {
+            write_response(&mut stdout, &response)?;
+        }
     }
 
     Ok(())
@@ -61,27 +62,34 @@ fn write_response(stdout: &mut io::Stdout, response: &JsonRpcResponse) -> Result
     Ok(())
 }
 
-fn handle_request(workspace_path: &Path, request: &JsonRpcRequest) -> JsonRpcResponse {
+fn handle_request(workspace_path: &Path, request: &JsonRpcRequest) -> Option<JsonRpcResponse> {
     match request.method.as_str() {
-        "initialize" => handle_initialize(request),
+        "initialize" => Some(handle_initialize(request)),
         "initialized" => {
-            // Notification, no response needed but we return empty for protocol compliance
-            JsonRpcResponse::success(request.id.clone(), json!({}))
+            // Notification - no response expected
+            debug!("Received initialized notification");
+            None
         }
-        "tools/list" => handle_tools_list(request),
-        "tools/call" => handle_tools_call(workspace_path, request),
-        "ping" => JsonRpcResponse::success(request.id.clone(), json!({})),
+        "tools/list" => Some(handle_tools_list(request)),
+        "tools/call" => Some(handle_tools_call(workspace_path, request)),
+        "ping" => Some(JsonRpcResponse::success(request.id.clone(), json!({}))),
         "notifications/cancelled" => {
-            // Notification about cancellation, acknowledge
-            JsonRpcResponse::success(request.id.clone(), json!({}))
+            // Notification - no response expected
+            debug!("Received cancellation notification");
+            None
+        }
+        method if method.starts_with("notifications/") => {
+            // All notifications - no response expected
+            debug!("Received notification: {}", method);
+            None
         }
         _ => {
             error!("Unknown method: {}", request.method);
-            JsonRpcResponse::error(
+            Some(JsonRpcResponse::error(
                 request.id.clone(),
                 -32601,
                 format!("Method not found: {}", request.method),
-            )
+            ))
         }
     }
 }
